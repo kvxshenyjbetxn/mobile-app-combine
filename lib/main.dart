@@ -7,9 +7,22 @@ import 'screens/setup_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final prefs = await SharedPreferences.getInstance();
-  final botToken = prefs.getString('bot_token');
-  final bool settingsExist = botToken != null && botToken.isNotEmpty;
+  bool settingsExist = false; // За замовчуванням вважаємо, що налаштувань немає
+
+  try {
+    print("СПРОБА ОТРИМАТИ SHARED PREFERENCES...");
+    final prefs = await SharedPreferences.getInstance();
+    final botToken = prefs.getString('bot_token');
+    settingsExist = botToken != null && botToken.isNotEmpty;
+    print(
+      "SHARED PREFERENCES УСПІШНО ОТРИМАНО. Налаштування існують: $settingsExist",
+    );
+  } catch (e) {
+    // Якщо сталася помилка, ми її побачимо
+    print("!!!!!!!!!!!!!!!!! ПОМИЛКА ПІД ЧАС ІНІЦІАЛІЗАЦІЇ !!!!!!!!!!!!!!!!!");
+    print(e);
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+  }
 
   runApp(MyApp(settingsExist: settingsExist));
 }
@@ -33,9 +46,7 @@ class MyApp extends StatelessWidget {
           secondary: Colors.tealAccent,
           surface: Color(0xFF1E1E1E), // Виправлено застарілий параметр
         ),
-        textTheme: GoogleFonts.ubuntuTextTheme(
-          ThemeData.dark().textTheme,
-        ),
+        textTheme: GoogleFonts.ubuntuTextTheme(ThemeData.dark().textTheme),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF1E1E1E),
           elevation: 0,

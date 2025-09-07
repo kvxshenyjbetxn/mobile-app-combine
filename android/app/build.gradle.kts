@@ -7,8 +7,10 @@ plugins {
 
 android {
     namespace = "com.example.mobile_app_combine"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
+    ndkVersion = "29.0.14033849"
+    buildToolsVersion = "35.0.0"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
