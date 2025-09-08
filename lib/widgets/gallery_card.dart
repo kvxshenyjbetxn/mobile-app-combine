@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../screens/fullscreen_image_screen.dart'; // <-- Імпортуємо новий екран
+import '../screens/fullscreen_image_screen.dart';
 
 class GalleryCard extends StatelessWidget {
   final String imageUrl;
   final String imageId;
+  final String currentPrompt; // <-- Додано
   final void Function(String) onDelete;
   final void Function(String, {String? newPrompt}) onRegenerate;
 
@@ -11,12 +12,15 @@ class GalleryCard extends StatelessWidget {
     super.key,
     required this.imageUrl,
     required this.imageId,
+    required this.currentPrompt, // <-- Додано
     required this.onDelete,
     required this.onRegenerate,
   });
 
   Future<void> _showEditPromptDialog(BuildContext context) async {
-    final controller = TextEditingController();
+    final controller = TextEditingController(
+      text: currentPrompt,
+    ); // <-- Встановлюємо початковий текст
     final newPrompt = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(

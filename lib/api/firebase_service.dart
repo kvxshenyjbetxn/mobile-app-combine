@@ -65,11 +65,13 @@ class FirebaseService {
                 url: imageData['url'] as String,
                 taskName: imageData['taskName'] as String? ?? 'Unnamed Task',
                 langCode: imageData['langCode'] as String? ?? 'N/A',
+                prompt: imageData['prompt'] as String? ?? '',
+                timestamp: imageData['timestamp'] as int? ?? 0,
               ),
             );
           });
-          // Сортуємо зображення за їх ID
-          images.sort((a, b) => a.id.compareTo(b.id));
+          // Сортуємо зображення за часом створення (хронологічно)
+          images.sort((a, b) => a.timestamp.compareTo(b.timestamp));
         } catch (e) {
           print("Error parsing image data snapshot: $e");
         }

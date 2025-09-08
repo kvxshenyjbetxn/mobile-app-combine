@@ -115,8 +115,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     itemBuilder: (context, imageIndex) {
                       final image = imagesInLang[imageIndex];
                       return GalleryCard(
+                        // Унікальний ключ, що змушує Flutter перебудувати віджет при зміні URL або видаленні
+                        key: ValueKey('${image.id}_${image.timestamp}'),
                         imageUrl: image.url,
                         imageId: image.id,
+                        currentPrompt: image.prompt,
                         onDelete: (id) {
                           widget.firebaseService.sendDeleteCommand(id);
                         },
