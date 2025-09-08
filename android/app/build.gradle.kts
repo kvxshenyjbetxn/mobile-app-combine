@@ -6,11 +6,9 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mobile_app_combine"
-    compileSdk = 36
+    namespace = "com.example.my_test_app"
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
-    ndkVersion = "29.0.14033849"
-    buildToolsVersion = "35.0.0"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -23,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mobile_app_combine"
+        applicationId = "com.example.my_test_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
