@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import '../api/telegram_service.dart';
 import '../models/gallery_image.dart';
-import '../../widgets/gallery_card.dart';
+import '../widgets/gallery_card.dart';
 
-class GalleryScreen extends StatelessWidget {
-  const GalleryScreen({super.key});
+class GalleryScreen extends StatefulWidget {
+  final TelegramService? telegramService;
 
+  const GalleryScreen({super.key, this.telegramService});
+
+  @override
+  State<GalleryScreen> createState() => _GalleryScreenState();
+}
+
+class _GalleryScreenState extends State<GalleryScreen> {
   // Тестові дані для візуалізації
   final List<GalleryImage> _mockImages = const [
     GalleryImage(id: 'img_001', url: 'https://picsum.photos/seed/1/300/300'),
@@ -54,6 +62,8 @@ class GalleryScreen extends StatelessWidget {
             ),
             onPressed: () {
               print('Continue montage command sent!');
+              // Приклад відправки команди на десктоп
+              widget.telegramService?.sendCommand('CMD::CONTINUE_MONTAGE');
             },
           ),
         ),

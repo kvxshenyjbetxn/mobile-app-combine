@@ -21,6 +21,9 @@ dependencies:
   # Для кастомних шрифтів (використовується в main.dart)
   google_fonts: ^6.2.1
 
+  # Для форматування дати і часу
+  intl: ^0.19.0
+
   # Іконки в стилі iOS
   cupertino_icons: ^1.0.8
 

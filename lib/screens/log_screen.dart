@@ -1,45 +1,115 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../api/telegram_service.dart';
 import '../models/log_entry.dart';
-import '../../widgets/log_list_item.dart';
+import '../widgets/log_list_item.dart';
 
-class LogScreen extends StatelessWidget {
-  const LogScreen({super.key});
+class LogScreen extends StatefulWidget {
+  final TelegramService? telegramService;
 
-  // Тестові дані для візуалізації
-  final List<LogEntry> _mockLogs = const [
-    LogEntry(
-        level: LogLevel.info,
-        message: 'Програму запущено. Логування активовано.',
-        timestamp: '14:32:01'),
-    LogEntry(
-        level: LogLevel.info,
-        message: 'Завдання "Task 1" додано до черги.',
-        timestamp: '14:32:15'),
-    LogEntry(
-        level: LogLevel.info,
-        message: '[Chain] Starting translation to UA...',
-        timestamp: '14:33:05'),
-    LogEntry(
-        level: LogLevel.warning,
-        message: 'Pollinations -> Спроба #2 не вдалася. Статус: 502.',
-        timestamp: '14:34:10'),
-    LogEntry(
-        level: LogLevel.info,
-        message: 'Pollinations -> УСПІХ: Зображення збережено.',
-        timestamp: '14:34:25'),
-    LogEntry(
-        level: LogLevel.error,
-        message: 'Не вдалося створити відео. FFmpeg exited with code 1.',
-        timestamp: '14:35:00'),
-  ];
+  const LogScreen({super.key, this.telegramService});
+
+  @override
+  State<LogScreen> createState() => _LogScreenState();
+}
+
+class _LogScreenState extends State<LogScreen> {
+  final List<LogEntry> _logs = [];
+  StreamSubscription? _messageSubscription;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _subscribeToMessages();
+  }
+
+  @override
+  void didUpdateWidget(covariant LogScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.telegramService != oldWidget.telegramService) {
+      _unsubscribe();
+      _subscribeToMessages();
+    }
+  }
+
+  void _subscribeToMessages() {
+    if (widget.telegramService == null) return;
+
+    _messageSubscription = widget.telegramService!.messages.listen((message) {
+      if (message.type == MessageType.log) {
+        if (mounted) {
+          setState(() {
+            final newLog = LogEntry(
+              level: _getLogLevelFromString(message.content),
+              message: message.content,
+              timestamp: DateFormat('HH:mm:ss').format(DateTime.now()),
+            );
+            _logs.insert(0, newLog); // Додаємо новий лог на початок списку
+          });
+        }
+      }
+    });
+  }
+
+  LogLevel _getLogLevelFromString(String message) {
+    final lowerCaseMessage = message.toLowerCase();
+    if (lowerCaseMessage.contains('error') ||
+        lowerCaseMessage.contains('помилка') ||
+        lowerCaseMessage.contains('failed')) {
+      return LogLevel.error;
+    }
+    if (lowerCaseMessage.contains('warning') ||
+        lowerCaseMessage.contains('попередження')) {
+      return LogLevel.warning;
+    }
+    return LogLevel.info;
+  }
+
+  void _unsubscribe() {
+    _messageSubscription?.cancel();
+  }
+
+  @override
+  void dispose() {
+    _unsubscribe();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.telegramService == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Ініціалізація Telegram сервісу...'),
+          ],
+        ),
+      );
+    }
+
+    if (_logs.isEmpty) {
+      return const Center(
+        child: Text(
+          'Очікування логів від десктопної програми...',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
     return ListView.builder(
+      controller: _scrollController,
+      reverse:
+          false, // Список тепер не перевернутий, бо ми додаємо елементи на початок
       padding: const EdgeInsets.all(8.0),
-      itemCount: _mockLogs.length,
+      itemCount: _logs.length,
       itemBuilder: (context, index) {
-        return LogListItem(logEntry: _mockLogs[index]);
+        return LogListItem(logEntry: _logs[index]);
       },
     );
   }
