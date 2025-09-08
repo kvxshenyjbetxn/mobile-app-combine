@@ -1,7 +1,7 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../api/telegram_service.dart';
+import '../api/firebase_service.dart';
 import 'log_screen.dart';
 import 'gallery_screen.dart';
 
@@ -9,37 +9,16 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  TelegramService? _telegramService;
-  // late final List<Widget> _widgetOptions; // Цей рядок більше не потрібен тут
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeTelegramService();
-    // Ініціалізація віджетів перенесена в метод build
-  }
-
-  Future<void> _initializeTelegramService() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('bot_token');
-    final chatId = prefs.getString('chat_id');
-
-    if (token != null && chatId != null) {
-      setState(() {
-        _telegramService = TelegramService(token: token, chatId: chatId);
-      });
-    }
-  }
+  final FirebaseService _firebaseService = FirebaseService();
 
   @override
   void dispose() {
-    _telegramService?.dispose();
+    _firebaseService.dispose();
     super.dispose();
   }
 
@@ -57,10 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    // Створюємо список віджетів тут, щоб він оновлювався при зміні стану
     final List<Widget> widgetOptions = <Widget>[
-      LogScreen(telegramService: _telegramService),
-      GalleryScreen(telegramService: _telegramService),
+      LogScreen(firebaseService: _firebaseService),
+      GalleryScreen(firebaseService: _firebaseService),
     ];
 
     return Scaffold(
@@ -71,10 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         centerTitle: true,
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: widgetOptions, // Використовуємо локальну змінну
-      ),
+      body: IndexedStack(index: _selectedIndex, children: widgetOptions),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.terminal), label: 'Журнал'),

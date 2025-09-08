@@ -12,7 +12,11 @@ dependencies:
     sdk: flutter
 
   # Для збереження налаштувань (токен, chat_id)
-  shared_preferences: ^2.2.3
+  shared_preferences: ^2.5.3
+
+  # Firebase
+  firebase_core: ^3.2.0
+  firebase_database: ^11.1.0
 
   # Для роботи з Telegram API
   teledart: ^0.6.1

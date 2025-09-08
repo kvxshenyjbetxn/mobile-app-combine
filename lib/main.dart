@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart'; // Автоматично згенерований файл
 import 'screens/home_screen.dart';
-import 'screens/setup_screen.dart';
 
 Future<void> main() async {
+  // Переконуємось, що Flutter ініціалізовано
   WidgetsFlutterBinding.ensureInitialized();
 
-  final prefs = await SharedPreferences.getInstance();
-  final botToken = prefs.getString('bot_token');
-  final bool settingsExist = botToken != null && botToken.isNotEmpty;
+  // Ініціалізуємо Firebase з опціями для вашого проєкту
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(MyApp(settingsExist: settingsExist));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final bool settingsExist;
-
-  const MyApp({super.key, required this.settingsExist});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +29,7 @@ class MyApp extends StatelessWidget {
         colorScheme: const ColorScheme.dark(
           primary: Colors.cyanAccent,
           secondary: Colors.tealAccent,
-          surface: Color(0xFF1E1E1E), // Виправлено застарілий параметр
+          surface: Color(0xFF1E1E1E),
         ),
         textTheme: GoogleFonts.ubuntuTextTheme(ThemeData.dark().textTheme),
         appBarTheme: const AppBarTheme(
@@ -44,11 +42,8 @@ class MyApp extends StatelessWidget {
           unselectedItemColor: Colors.grey,
         ),
       ),
-      initialRoute: settingsExist ? '/home' : '/setup',
-      routes: {
-        '/setup': (context) => const SetupScreen(),
-        '/home': (context) => const HomeScreen(),
-      },
+      // Завжди запускаємо головний екран
+      home: const HomeScreen(),
     );
   }
 }
