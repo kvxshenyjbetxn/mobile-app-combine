@@ -105,10 +105,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     padding: const EdgeInsets.all(8.0),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                          crossAxisCount: 2, // <-- Змінюємо на 1 колонку
                           crossAxisSpacing: 8.0,
                           mainAxisSpacing: 8.0,
-                          childAspectRatio: 16 / 9,
+                          childAspectRatio:
+                              16 / 10, // <-- Робимо картку трохи вищою
                         ),
                     itemCount: imagesInLang.length,
                     itemBuilder: (context, imageIndex) {
@@ -116,8 +117,15 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       return GalleryCard(
                         imageUrl: image.url,
                         imageId: image.id,
-                        onDelete: (id) {},
-                        onRegenerate: (id) {},
+                        onDelete: (id) {
+                          widget.firebaseService.sendDeleteCommand(id);
+                        },
+                        onRegenerate: (id, {newPrompt}) {
+                          widget.firebaseService.sendRegenerateCommand(
+                            id,
+                            newPrompt: newPrompt,
+                          );
+                        },
                       );
                     },
                   ),

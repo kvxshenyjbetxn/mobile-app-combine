@@ -98,4 +98,40 @@ class FirebaseService {
     _logStreamController.close();
     _imageStreamController.close();
   }
+
+  // --- Нові методи для відправки команд ---
+  final DatabaseReference _commandsRef = FirebaseDatabase.instance.ref(
+    'commands',
+  );
+
+  Future<void> sendDeleteCommand(String imageId) async {
+    try {
+      await _commandsRef.push().set({
+        'command': 'delete',
+        'imageId': imageId,
+        'timestamp': ServerValue.timestamp,
+      });
+    } catch (e) {
+      print("Error sending delete command: $e");
+    }
+  }
+
+  Future<void> sendRegenerateCommand(
+    String imageId, {
+    String? newPrompt,
+  }) async {
+    try {
+      final payload = {
+        'command': 'regenerate',
+        'imageId': imageId,
+        'timestamp': ServerValue.timestamp,
+      };
+      if (newPrompt != null) {
+        payload['newPrompt'] = newPrompt;
+      }
+      await _commandsRef.push().set(payload);
+    } catch (e) {
+      print("Error sending regenerate command: $e");
+    }
+  }
 }
