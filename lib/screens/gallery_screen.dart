@@ -1,4 +1,5 @@
 // lib/screens/gallery_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../api/firebase_service.dart';
 import '../models/gallery_image.dart';
@@ -14,36 +15,68 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  final List<GalleryImage> _mockImages = const [
-    GalleryImage(id: 'img_001', url: 'https://picsum.photos/seed/1/300/300'),
-    GalleryImage(id: 'img_002', url: 'https://picsum.photos/seed/2/300/300'),
-  ];
+  List<GalleryImage> _images = [];
+  StreamSubscription? _imageSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscribeToImages();
+  }
+
+  void _subscribeToImages() {
+    _imageSubscription = widget.firebaseService.imageStream.listen((imageList) {
+      if (mounted) {
+        setState(() {
+          _images = imageList;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _imageSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(8.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 8.0,
-              mainAxisSpacing: 8.0,
-            ),
-            itemCount: _mockImages.length,
-            itemBuilder: (context, index) {
-              final image = _mockImages[index];
-              return GalleryCard(
-                imageUrl: image.url,
-                imageId: image.id,
-                onDelete: (id) {},
-                onRegenerate: (id) {},
-              );
-            },
-          ),
+    if (_images.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Очікування зображень від десктопної програми...'),
+          ],
         ),
-      ],
+      );
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(8.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
+        childAspectRatio: 16 / 9,
+      ),
+      itemCount: _images.length,
+      itemBuilder: (context, index) {
+        final image = _images[index];
+        return GalleryCard(
+          imageUrl: image.url,
+          imageId: image.id,
+          onDelete: (id) {
+            // TODO: Implement delete functionality
+          },
+          onRegenerate: (id) {
+            // TODO: Implement regenerate functionality
+          },
+        );
+      },
     );
   }
 }
