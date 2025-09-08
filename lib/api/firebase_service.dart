@@ -63,6 +63,8 @@ class FirebaseService {
               GalleryImage(
                 id: imageData['id'] as String,
                 url: imageData['url'] as String,
+                taskName: imageData['taskName'] as String? ?? 'Unnamed Task',
+                langCode: imageData['langCode'] as String? ?? 'N/A',
               ),
             );
           });

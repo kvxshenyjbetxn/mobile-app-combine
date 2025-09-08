@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../api/firebase_service.dart';
 import '../models/gallery_image.dart';
 import '../widgets/gallery_card.dart';
+import 'package:collection/collection.dart';
 
 class GalleryScreen extends StatefulWidget {
   final FirebaseService firebaseService;
@@ -55,26 +56,75 @@ class _GalleryScreenState extends State<GalleryScreen> {
       );
     }
 
-    return GridView.builder(
+    // Групуємо зображення за назвою завдання
+    final groupedByTask = groupBy(_images, (image) => image.taskName);
+    final taskKeys = groupedByTask.keys.toList()..sort();
+
+    return ListView.builder(
       padding: const EdgeInsets.all(8.0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8.0,
-        mainAxisSpacing: 8.0,
-        childAspectRatio: 16 / 9,
-      ),
-      itemCount: _images.length,
-      itemBuilder: (context, index) {
-        final image = _images[index];
-        return GalleryCard(
-          imageUrl: image.url,
-          imageId: image.id,
-          onDelete: (id) {
-            // TODO: Implement delete functionality
-          },
-          onRegenerate: (id) {
-            // TODO: Implement regenerate functionality
-          },
+      itemCount: taskKeys.length,
+      itemBuilder: (context, taskIndex) {
+        final taskName = taskKeys[taskIndex];
+        final imagesInTask = groupedByTask[taskName]!;
+
+        // Групуємо зображення всередині завдання за мовою
+        final groupedByLang = groupBy(imagesInTask, (image) => image.langCode);
+        final langKeys = groupedByLang.keys.toList()..sort();
+
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          color: const Color(0xFF1E1E1E),
+          child: ExpansionTile(
+            title: Text(
+              taskName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            initiallyExpanded: true,
+            children: langKeys.map((langCode) {
+              final imagesInLang = groupedByLang[langCode]!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Text(
+                      'Мова: ${langCode.toUpperCase()}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(8.0),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 8.0,
+                          childAspectRatio: 16 / 9,
+                        ),
+                    itemCount: imagesInLang.length,
+                    itemBuilder: (context, imageIndex) {
+                      final image = imagesInLang[imageIndex];
+                      return GalleryCard(
+                        imageUrl: image.url,
+                        imageId: image.id,
+                        onDelete: (id) {},
+                        onRegenerate: (id) {},
+                      );
+                    },
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
         );
       },
     );
