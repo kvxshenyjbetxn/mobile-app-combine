@@ -16,6 +16,8 @@ class FirebaseService {
   final StreamController<bool> _montageReadyController =
       StreamController<bool>.broadcast();
 
+  bool _previousMontageReadyState = false; // Відслідковуємо попередній стан
+
   late StreamSubscription _logSubscription;
   late StreamSubscription _imageSubscription;
   late StreamSubscription _statusSubscription;
@@ -101,16 +103,20 @@ class FirebaseService {
           final data = Map<String, dynamic>.from(event.snapshot.value as Map);
           final isReady = data['montage_ready'] as bool? ?? false;
 
-          if (isReady) {
+          // Показуємо повідомлення тільки при зміні з false на true
+          if (isReady && !_previousMontageReadyState) {
             NotificationService.showMontageReadyNotification();
           }
 
+          _previousMontageReadyState = isReady;
           _montageReadyController.add(isReady);
         } catch (e) {
           print("Error parsing status data: $e");
+          _previousMontageReadyState = false;
           _montageReadyController.add(false);
         }
       } else {
+        _previousMontageReadyState = false;
         _montageReadyController.add(false);
       }
     });

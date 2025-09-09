@@ -22,6 +22,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
   bool _showContinueButton = false;
   bool _isMontageReady = false;
 
+  // Стан для відстеження згорнутих мов
+  final Map<String, bool> _expandedLanguages = {};
+
   @override
   void initState() {
     super.initState();
@@ -102,8 +105,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             margin: const EdgeInsets.symmetric(vertical: 8.0),
             color: const Color(0xFF1E1E1E),
             child: ExpansionTile(
+              leading: Icon(Icons.task_alt, color: Colors.green[400], size: 28),
               title: Text(
-                taskName,
+                '$taskName (${imagesInTask.length})',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -112,23 +116,37 @@ class _GalleryScreenState extends State<GalleryScreen> {
               initiallyExpanded: true,
               children: langKeys.map((langCode) {
                 final imagesInLang = groupedByLang[langCode]!;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: Text(
-                        'Мова: ${langCode.toUpperCase()}',
+                final languageKey = '${taskName}_$langCode';
+
+                return ExpansionTile(
+                  title: Row(
+                    children: [
+                      Icon(Icons.language, color: Colors.grey[400], size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${langCode.toUpperCase()} (${imagesInLang.length})',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.grey[400],
+                          color: Colors.grey[300],
                         ),
                       ),
-                    ),
+                    ],
+                  ),
+                  leading: Icon(
+                    Icons.translate,
+                    color: Colors.cyan[300],
+                    size: 24,
+                  ),
+                  initiallyExpanded: _expandedLanguages[languageKey] ?? true,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      _expandedLanguages[languageKey] = expanded;
+                    });
+                  },
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  children: [
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
