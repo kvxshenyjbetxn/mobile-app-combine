@@ -1,13 +1,19 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../models/log_entry.dart';
 import '../models/gallery_image.dart';
 import '../services/notification_service.dart';
+import '../services/user_service.dart';
 
 class FirebaseService {
-  final DatabaseReference _logsRef = FirebaseDatabase.instance.ref('logs');
-  final DatabaseReference _imagesRef = FirebaseDatabase.instance.ref('images');
-  final DatabaseReference _statusRef = FirebaseDatabase.instance.ref('status');
+  String? _userId;
+  String get basePath => 'users/${_userId ?? "default"}';
+
+  late DatabaseReference _logsRef;
+  late DatabaseReference _imagesRef;
+  late DatabaseReference _commandsRef;
+  late DatabaseReference _statusRef;
 
   final StreamController<List<LogEntry>> _logStreamController =
       StreamController<List<LogEntry>>.broadcast();
@@ -27,10 +33,34 @@ class FirebaseService {
   Stream<bool> get montageReadyStream => _montageReadyController.stream;
 
   FirebaseService() {
+    _initializeWithStoredUserId();
+  }
+
+  Future<void> _initializeWithStoredUserId() async {
+    final userId = await UserService.getUserId();
+    if (userId.isNotEmpty) {
+      await initializeWithUserId(userId);
+    } else {
+      _initializeReferences();
+    }
+
     NotificationService.initialize();
     _listenToLogs();
     _listenToImages();
     _listenToMontageStatus();
+  }
+
+  Future<void> initializeWithUserId(String userId) async {
+    _userId = userId;
+    await UserService.setUserId(userId);
+    _initializeReferences();
+  }
+
+  void _initializeReferences() {
+    _logsRef = FirebaseDatabase.instance.ref('$basePath/logs');
+    _imagesRef = FirebaseDatabase.instance.ref('$basePath/images');
+    _commandsRef = FirebaseDatabase.instance.ref('$basePath/commands');
+    _statusRef = FirebaseDatabase.instance.ref('$basePath/status');
   }
 
   void _listenToLogs() {
@@ -146,9 +176,6 @@ class FirebaseService {
   }
 
   // --- Нові методи для відправки команд ---
-  final DatabaseReference _commandsRef = FirebaseDatabase.instance.ref(
-    'commands',
-  );
 
   Future<void> sendDeleteCommand(String imageId) async {
     try {
@@ -202,6 +229,100 @@ class FirebaseService {
       print("Continue montage command sent successfully");
     } catch (e) {
       print("Error sending continue montage command: $e");
+    }
+  }
+
+  /// Очищення логів тільки для поточного користувача
+  Future<void> clearUserLogs() async {
+    try {
+      await _logsRef.remove();
+      print('Logs cleared for user $_userId');
+    } catch (e) {
+      print('Error clearing logs: $e');
+      rethrow;
+    }
+  }
+
+  /// Очищення галереї тільки для поточного користувача
+  Future<void> clearUserGallery() async {
+    try {
+      // Очищення Database
+      await _imagesRef.remove();
+
+      // Очищення Storage файлів
+      try {
+        final storageRef = FirebaseStorage.instance.ref(
+          '$_userId/gallery_images',
+        );
+        final listResult = await storageRef.listAll();
+
+        for (var item in listResult.items) {
+          await item.delete();
+        }
+      } catch (storageError) {
+        print('Storage clearing error (may be empty): $storageError');
+      }
+
+      print('Gallery cleared for user $_userId');
+    } catch (e) {
+      print('Error clearing gallery: $e');
+      rethrow;
+    }
+  }
+
+  /// Отримання статистики тільки для поточного користувача
+  Future<Map<String, int>> getUserStats() async {
+    try {
+      final logsSnapshot = await _logsRef.get();
+      final imagesSnapshot = await _imagesRef.get();
+
+      int logsCount = 0;
+      int imagesCount = 0;
+
+      if (logsSnapshot.exists && logsSnapshot.value != null) {
+        final logsData = logsSnapshot.value as Map;
+        logsCount = logsData.length;
+      }
+
+      if (imagesSnapshot.exists && imagesSnapshot.value != null) {
+        final imagesData = imagesSnapshot.value as Map;
+        imagesCount = imagesData.length;
+      }
+
+      return {'logs': logsCount, 'images': imagesCount};
+    } catch (e) {
+      print('Error getting user stats: $e');
+      return {'logs': 0, 'images': 0};
+    }
+  }
+
+  /// Отримання поточного User ID
+  String? get currentUserId => _userId;
+
+  /// Отримання списку всіх існуючих User ID з Firebase
+  Future<List<String>> getExistingUserIds() async {
+    try {
+      final usersRef = FirebaseDatabase.instance.ref('users');
+      final snapshot = await usersRef.get();
+
+      if (snapshot.exists && snapshot.value != null) {
+        final usersData = snapshot.value as Map;
+        final userIds = usersData.keys.map((key) => key.toString()).toList();
+
+        // Сортуємо числові ID
+        userIds.sort((a, b) {
+          final aNum = int.tryParse(a) ?? 99999;
+          final bNum = int.tryParse(b) ?? 99999;
+          return aNum.compareTo(bNum);
+        });
+
+        return userIds;
+      }
+
+      return [];
+    } catch (e) {
+      print('Error getting existing user IDs: $e');
+      return [];
     }
   }
 }

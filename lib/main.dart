@@ -4,7 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'firebase_options.dart'; // Автоматично згенерований файл
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'services/notification_service.dart';
+import 'services/user_service.dart';
+import 'api/firebase_service.dart';
 
 Future<void> main() async {
   // Переконуємось, що Flutter ініціалізовано
@@ -57,8 +60,53 @@ class MyApp extends StatelessWidget {
           unselectedItemColor: Colors.grey,
         ),
       ),
-      // Завжди запускаємо головний екран
-      home: const HomeScreen(),
+      home: const AuthWrapper(),
+      routes: {
+        '/login': (context) => LoginScreen(firebaseService: FirebaseService()),
+        '/home': (context) => const HomeScreen(),
+      },
     );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isLoading = true;
+  bool _hasUserId = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserIdStatus();
+  }
+
+  Future<void> _checkUserIdStatus() async {
+    final hasUserId = await UserService.hasUserId();
+    setState(() {
+      _hasUserId = hasUserId;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121212),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.cyanAccent),
+        ),
+      );
+    }
+
+    return _hasUserId
+        ? const HomeScreen()
+        : LoginScreen(firebaseService: FirebaseService());
   }
 }
