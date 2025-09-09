@@ -70,8 +70,14 @@ class FirebaseService {
               ),
             );
           });
-          // Сортуємо зображення за часом створення (хронологічно)
-          images.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+          // Сортуємо зображення спочатку за завданням, потім за індексом зображення
+          images.sort((a, b) {
+            final taskComparison = a.taskIndex.compareTo(b.taskIndex);
+            if (taskComparison != 0) {
+              return taskComparison;
+            }
+            return a.imageIndex.compareTo(b.imageIndex);
+          });
         } catch (e) {
           print("Error parsing image data snapshot: $e");
         }
