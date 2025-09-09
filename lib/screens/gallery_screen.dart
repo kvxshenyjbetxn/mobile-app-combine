@@ -18,12 +18,15 @@ class GalleryScreen extends StatefulWidget {
 class _GalleryScreenState extends State<GalleryScreen> {
   List<GalleryImage> _images = [];
   StreamSubscription? _imageSubscription;
+  StreamSubscription? _montageReadySubscription;
   bool _showContinueButton = false;
+  bool _isMontageReady = false;
 
   @override
   void initState() {
     super.initState();
     _subscribeToImages();
+    _subscribeToMontageReady();
   }
 
   void _subscribeToImages() {
@@ -31,16 +34,33 @@ class _GalleryScreenState extends State<GalleryScreen> {
       if (mounted) {
         setState(() {
           _images = imageList;
-          // Показуємо кнопку продовження, якщо є зображення
-          _showContinueButton = imageList.isNotEmpty;
+          _updateContinueButtonVisibility();
         });
       }
     });
   }
 
+  void _subscribeToMontageReady() {
+    _montageReadySubscription = widget.firebaseService.montageReadyStream
+        .listen((isReady) {
+          if (mounted) {
+            setState(() {
+              _isMontageReady = isReady;
+              _updateContinueButtonVisibility();
+            });
+          }
+        });
+  }
+
+  void _updateContinueButtonVisibility() {
+    // Показуємо кнопку тільки коли є зображення І програма готова до монтажу
+    _showContinueButton = _images.isNotEmpty && _isMontageReady;
+  }
+
   @override
   void dispose() {
     _imageSubscription?.cancel();
+    _montageReadySubscription?.cancel();
     super.dispose();
   }
 

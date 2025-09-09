@@ -18,6 +18,10 @@ dependencies:
   firebase_core: ^3.2.0
   firebase_database: ^11.1.0
   firebase_storage: ^12.1.0
+  firebase_messaging: ^15.1.0
+
+  # Для локальних повідомлень
+  flutter_local_notifications: ^18.0.1
 
   # Для роботи з Telegram API
   teledart: ^0.6.1

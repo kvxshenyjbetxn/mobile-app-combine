@@ -2,25 +2,33 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/log_entry.dart';
 import '../models/gallery_image.dart';
+import '../services/notification_service.dart';
 
 class FirebaseService {
   final DatabaseReference _logsRef = FirebaseDatabase.instance.ref('logs');
   final DatabaseReference _imagesRef = FirebaseDatabase.instance.ref('images');
+  final DatabaseReference _statusRef = FirebaseDatabase.instance.ref('status');
 
   final StreamController<List<LogEntry>> _logStreamController =
       StreamController<List<LogEntry>>.broadcast();
   final StreamController<List<GalleryImage>> _imageStreamController =
       StreamController<List<GalleryImage>>.broadcast();
+  final StreamController<bool> _montageReadyController =
+      StreamController<bool>.broadcast();
 
   late StreamSubscription _logSubscription;
   late StreamSubscription _imageSubscription;
+  late StreamSubscription _statusSubscription;
 
   Stream<List<LogEntry>> get logStream => _logStreamController.stream;
   Stream<List<GalleryImage>> get imageStream => _imageStreamController.stream;
+  Stream<bool> get montageReadyStream => _montageReadyController.stream;
 
   FirebaseService() {
+    NotificationService.initialize();
     _listenToLogs();
     _listenToImages();
+    _listenToMontageStatus();
   }
 
   void _listenToLogs() {
@@ -86,6 +94,28 @@ class FirebaseService {
     });
   }
 
+  void _listenToMontageStatus() {
+    _statusSubscription = _statusRef.onValue.listen((event) {
+      if (event.snapshot.exists && event.snapshot.value != null) {
+        try {
+          final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+          final isReady = data['montage_ready'] as bool? ?? false;
+
+          if (isReady) {
+            NotificationService.showMontageReadyNotification();
+          }
+
+          _montageReadyController.add(isReady);
+        } catch (e) {
+          print("Error parsing status data: $e");
+          _montageReadyController.add(false);
+        }
+      } else {
+        _montageReadyController.add(false);
+      }
+    });
+  }
+
   LogLevel _getLogLevelFromString(String message) {
     final lowerCaseMessage = message.toLowerCase();
     if (lowerCaseMessage.contains('error') ||
@@ -103,8 +133,10 @@ class FirebaseService {
   void dispose() {
     _logSubscription.cancel();
     _imageSubscription.cancel();
+    _statusSubscription.cancel();
     _logStreamController.close();
     _imageStreamController.close();
+    _montageReadyController.close();
   }
 
   // --- Нові методи для відправки команд ---

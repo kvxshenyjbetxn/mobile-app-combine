@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'firebase_options.dart'; // Автоматично згенерований файл
 import 'screens/home_screen.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   // Переконуємось, що Flutter ініціалізовано
@@ -10,6 +12,19 @@ Future<void> main() async {
 
   // Ініціалізуємо Firebase з опціями для вашого проєкту
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Ініціалізуємо сервіс повідомлень
+  await NotificationService.initialize();
+
+  // Запитуємо дозвіл для повідомлень
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.requestNotificationsPermission();
 
   runApp(const MyApp());
 }
