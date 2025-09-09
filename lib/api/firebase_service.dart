@@ -159,6 +159,9 @@ class FirebaseService {
   Future<void> sendRegenerateCommand(
     String imageId, {
     String? newPrompt,
+    String? serviceOverride,
+    String? modelOverride,
+    String? styleOverride,
   }) async {
     try {
       final payload = {
@@ -168,6 +171,15 @@ class FirebaseService {
       };
       if (newPrompt != null) {
         payload['newPrompt'] = newPrompt;
+      }
+      if (serviceOverride != null) {
+        payload['serviceOverride'] = serviceOverride;
+      }
+      if (modelOverride != null) {
+        payload['modelOverride'] = modelOverride;
+      }
+      if (styleOverride != null) {
+        payload['styleOverride'] = styleOverride;
       }
       await _commandsRef.push().set(payload);
     } catch (e) {

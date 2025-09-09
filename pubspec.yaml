@@ -36,6 +36,9 @@ dependencies:
   # Іконки в стилі iOS
   cupertino_icons: ^1.0.8
 
+  # Для роботи з колекціями
+  collection: ^1.18.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
