@@ -37,12 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _firebaseService.dispose();
-    super.dispose();
-  }
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -197,18 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             onTap: () => _clearUserData(),
           ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.orange),
-            title: const Text(
-              'Змінити користувача',
-              style: TextStyle(color: Colors.white),
-            ),
-            subtitle: Text(
-              'Вийти та увійти з іншим ID',
-              style: TextStyle(color: Colors.grey[400]),
-            ),
-            onTap: () => _switchUser(),
-          ),
         ],
       ),
     );
@@ -267,12 +249,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     }
-  }
-
-  Future<void> _switchUser() async {
-    Navigator.pop(context); // Закрити bottom sheet
-    await UserService.clearUserId(); // Очистити збережений user ID
-    Navigator.pushReplacementNamed(context, '/login');
   }
 
   Future<String?> _showInputDialog(
