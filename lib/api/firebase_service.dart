@@ -142,4 +142,16 @@ class FirebaseService {
       print("Error sending regenerate command: $e");
     }
   }
+
+  Future<void> sendContinueMontageCommand() async {
+    try {
+      await _commandsRef.push().set({
+        'command': 'continue_montage',
+        'timestamp': ServerValue.timestamp,
+      });
+      print("Continue montage command sent successfully");
+    } catch (e) {
+      print("Error sending continue montage command: $e");
+    }
+  }
 }
