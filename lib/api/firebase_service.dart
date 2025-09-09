@@ -51,24 +51,58 @@ class FirebaseService {
   }
 
   Future<void> initializeWithUserId(String userId) async {
+    // Спочатку зупиняємо поточні слухачі (якщо вони ініціалізовані)
+    try {
+      _logSubscription.cancel();
+    } catch (e) {
+      // Ignore if not initialized
+    }
+    try {
+      _imageSubscription.cancel();
+    } catch (e) {
+      // Ignore if not initialized
+    }
+    try {
+      _statusSubscription.cancel();
+    } catch (e) {
+      // Ignore if not initialized
+    }
+
     _userId = userId;
     await UserService.setUserId(userId);
+    print("DEBUG: About to initialize references with userId: $userId");
     _initializeReferences();
+
+    // Перезапускаємо слухачі з новими шляхами
+    print("DEBUG: About to restart listeners");
+    _listenToLogs();
+    _listenToImages();
+    _listenToMontageStatus();
+    print("Firebase initialized with User ID: $_userId");
   }
 
   void _initializeReferences() {
+    print("DEBUG: _initializeReferences called with basePath: $basePath");
+    print("DEBUG: _userId = $_userId");
     _logsRef = FirebaseDatabase.instance.ref('$basePath/logs');
     _imagesRef = FirebaseDatabase.instance.ref('$basePath/images');
     _commandsRef = FirebaseDatabase.instance.ref('$basePath/commands');
     _statusRef = FirebaseDatabase.instance.ref('$basePath/status');
+    print("DEBUG: _logsRef path: ${_logsRef.path}");
   }
 
   void _listenToLogs() {
+    print("DEBUG: _listenToLogs starting, listening to path: ${_logsRef.path}");
     _logSubscription = _logsRef.onValue.listen((event) {
+      print("DEBUG: Firebase event received");
+      print("DEBUG: snapshot exists: ${event.snapshot.exists}");
+      print("DEBUG: snapshot value: ${event.snapshot.value}");
+
       final List<LogEntry> logs = [];
       if (event.snapshot.exists && event.snapshot.value != null) {
         try {
           final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+          print("DEBUG: Processing ${data.length} log entries");
           data.forEach((key, value) {
             final logData = Map<String, dynamic>.from(value as Map);
             final message = logData['message'] as String;
@@ -83,10 +117,14 @@ class FirebaseService {
             );
           });
           logs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          print("DEBUG: Processed ${logs.length} logs, sending to stream");
         } catch (e) {
           print("Error parsing log data snapshot: $e");
         }
+      } else {
+        print("DEBUG: No log data found (snapshot doesn't exist or is null)");
       }
+      print("DEBUG: Adding ${logs.length} logs to stream");
       _logStreamController.add(logs);
     });
   }

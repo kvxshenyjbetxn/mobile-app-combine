@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/user_service.dart';
 import '../api/firebase_service.dart';
 
@@ -39,8 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkExistingUserId() async {
     final userId = await UserService.getUserId();
     if (userId.isNotEmpty) {
-      await widget.firebaseService.initializeWithUserId(userId);
-      _navigateToHome();
+      // Пробуємо увійти анонімно та використати збережений UID
+      await _signInAnonymouslyAndConnect(userId);
     }
   }
 
@@ -54,12 +55,31 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await widget.firebaseService.initializeWithUserId(userId);
-      _navigateToHome();
+      await _signInAnonymouslyAndConnect(userId);
     } catch (e) {
       _showError('Помилка підключення: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _signInAnonymouslyAndConnect(String targetUserId) async {
+    try {
+      // Замість спроби підключитися до існуючого користувача,
+      // ми створюємо власний анонімний обліковий запис для читання
+      await FirebaseAuth.instance.signInAnonymously();
+
+      // Але використовуємо targetUserId для читання даних
+      await UserService.setUserId(targetUserId);
+
+      // Ініціалізуємо Firebase Service з target userId (не з нашого auth)
+      await widget.firebaseService.initializeWithUserId(targetUserId);
+
+      _navigateToHome();
+    } catch (e) {
+      throw Exception('Не вдалося підключитися: $e');
     }
   }
 

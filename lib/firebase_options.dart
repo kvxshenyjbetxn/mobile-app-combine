@@ -29,21 +29,23 @@ class DefaultFirebaseOptions {
 
   // --- ВСТАВТЕ ВАШІ ДАНІ З FIREBASE CONSOLE СЮДИ ---
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: "AIzaSyBWHOg1tUdL5nGUFsNq4KuTjttToBE2QkQY", // <-- ВАШ КЛЮЧ
+    apiKey: "AIzaSyBWHOg1tUdL5nGUFsNq4KuTjttToBE2QkQ", // <-- ВАШ КЛЮЧ
     appId: "1:597848779620:android:54c879e6499fb3b05ce871", // <-- ВАШ ID
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    messagingSenderId: "597848779620",
     projectId: "projectcombain", // <-- ВАШ ID ПРОЄКТУ
     databaseURL:
         "https://projectcombain-default-rtdb.europe-west1.firebasedatabase.app/", // <-- ВАША URL БАЗИ ДАНИХ
+    storageBucket: "projectcombain.appspot.com",
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: "AIzaSyBWHOg1tUdL5nGUFsNq4KuTjttToBE2QkQY", // <-- ВАШ КЛЮЧ
+    apiKey: "AIzaSyBWHOg1tUdL5nGUFsNq4KuTjttToBE2QkQ", // <-- ВАШ КЛЮЧ
     appId: "1:597848779620:ios:d72aafc6e047c7255ce871", // <-- ВАШ ID
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    messagingSenderId: "597848779620",
     projectId: "projectcombain", // <-- ВАШ ID ПРОЄКТУ
     databaseURL:
         "https://projectcombain-default-rtdb.europe-west1.firebasedatabase.app/", // <-- ВАША URL БАЗИ ДАНИХ
+    storageBucket: "projectcombain.appspot.com",
     iosBundleId: 'com.example.myTestApp', // Переконайтесь, що це ваш bundle ID
   );
   // --------------------------------------------------
